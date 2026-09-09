@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Intelligent Freight Forecasting Model for optimized vessel chartering and bulk cargo procurement to India's East Coast ports. Predict rates, optimize vessels, and manage risk.">
+  <title>FreightForecast Pro — Intelligent Freight Rate Forecasting</title>
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/index.css?v=5">
+  <link rel="stylesheet" href="css/dashboard.css?v=5">
+  <link rel="stylesheet" href="css/components.css?v=5">
+  <link rel="stylesheet" href="css/charts.css?v=5">
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+
+  <!-- Leaflet.js for Telematics -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+</head>
+<body>
+
+<div class="app-shell" id="appShell">
+
+  <!-- ========== SIDEBAR ========== -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">⚓</div>
+      <div class="brand-text">
+        <span class="brand-name">FreightForecast</span>
+        <span class="brand-subtitle">PRO</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav" id="sidebarNav">
+      <div class="nav-section-label">Analytics</div>
+
+      <div class="nav-item active" data-panel="forecast" id="nav-forecast">
+        <span class="nav-icon">📊</span>
+        <span class="nav-label">Rate Forecast</span>
+      </div>
+      <div class="nav-item" data-panel="vessel" id="nav-vessel">
+        <span class="nav-icon">🚢</span>
+        <span class="nav-label">Vessel Optimizer</span>
+      </div>
+      <div class="nav-item" data-panel="route" id="nav-route">
+        <span class="nav-icon">🗺️</span>
+        <span class="nav-label">Route Analysis</span>
+      </div>
+      <div class="nav-item" data-panel="port" id="nav-port">
+        <span class="nav-icon">⚓</span>
+        <span class="nav-label">Port Infrastructure</span>
+      </div>
+
+        <div class="nav-section-label">Intelligence</div>
+        <div class="nav-item" data-panel="risk">
+          <div class="nav-icon">⚠️</div>
+          <div class="nav-label">Risk Alerts</div>
+          <div class="nav-badge" id="riskBadge">2</div>
+        </div>
+        <div class="nav-item" data-panel="contract">
+          <div class="nav-icon">📋</div>
+          <div class="nav-label">Contract Strategy</div>
+        </div>
+        <div class="nav-item" data-panel="idle">
+          <div class="nav-icon">⏱️</div>
+          <div class="nav-label">Idle Management</div>
+        </div>
+
+        <div class="nav-section-label">Operations & AI</div>
+        <div class="nav-item" data-panel="telematics">
+          <div class="nav-icon">📡</div>
+          <div class="nav-label">Live Telematics</div>
+        </div>
+        <div class="nav-item" data-panel="ai">
+          <div class="nav-icon">🧠</div>
+          <div class="nav-label">AI Assistant</div>
+        </div>
+      </nav>
+
+    <div class="sidebar-toggle">
+      <button onclick="window.app.toggleSidebar()" id="sidebarToggleBtn">
+        <span>◀</span> <span class="nav-label">Collapse</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- ========== MAIN AREA ========== -->
+  <main class="main-area">
+
+    <!-- Top Header -->
+    <header class="top-header">
+      <div class="header-left">
+        <h1 class="header-page-title" id="pageTitle">Rate Forecast</h1>
+      </div>
+      <div class="header-right">
+        <div class="kpi-bar" id="kpiBar">
+          <!-- KPIs rendered by JS -->
+        </div>
+        <div class="status-indicator" id="connectionStatusPill" title="Click for live connection status & diagnostics">
+          <span class="status-dot connected" id="wsStatusDot"></span>
+          <span class="text-xs text-secondary font-mono" id="wsStatusText">Connecting...</span>
+          <span class="badge badge-sm" id="wsLatencyBadge" style="display:none; font-size:10px; padding: 2px 6px;">-- ms</span>
+          <span class="text-xs text-secondary font-mono" id="clockDisplay" style="border-left: 1px solid rgba(255,255,255,0.1); padding-left: 8px;">—</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Content Area -->
+    <div class="content-area" id="contentArea">
+
+      <!-- ==================== FORECAST PANEL ==================== -->
+      <div class="panel active" id="panel-forecast">
+        <!-- Stat Cards -->
+        <div class="stat-cards" id="forecastStats">
+          <!-- Rendered by JS -->
+        </div>
+
+        <!-- Controls Row -->
+        <div class="dash-card" style="margin-bottom: var(--space-5);">
+          <div class="form-inline">
+            <div class="form-group">
+              <label class="form-label">Vessel Class</label>
+              <select class="form-select" id="forecastVesselSelect">
+                <option value="CAPESIZE">Capesize</option>
+                <option value="PANAMAX">Panamax</option>
+                <option value="SUPRAMAX">Supramax</option>
+                <option value="HANDYSIZE">Handysize</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Forecast Horizon</label>
+              <select class="form-select" id="forecastHorizonSelect">
+                <option value="30">30 Days</option>
+                <option value="90" selected>90 Days</option>
+                <option value="180">180 Days</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">History</label>
+              <div class="btn-group" id="historyPeriodGroup">
+                <button class="btn btn-secondary btn-sm" data-period="90">3M</button>
+                <button class="btn btn-secondary btn-sm" data-period="180">6M</button>
+                <button class="btn btn-secondary btn-sm active" data-period="365">1Y</button>
+                <button class="btn btn-secondary btn-sm" data-period="1095">3Y</button>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">&nbsp;</label>
+              <button class="btn btn-primary" id="runForecastBtn">Run Forecast</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Main Forecast Chart -->
+        <div class="panel-grid panel-grid-3-2" style="margin-bottom: var(--space-5);">
+          <div class="dash-card">
+            <div class="dash-card-header">
+              <div>
+                <div class="dash-card-title">Freight Rate Forecast</div>
+                <div class="dash-card-subtitle" id="forecastChartSubtitle">TC Rate ($/day) — Capesize</div>
+              </div>
+              <div class="chart-legend" id="forecastLegend"></div>
+            </div>
+            <div class="chart-container chart-lg">
+              <canvas id="mainForecastChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Market Entry Score -->
+          <div class="dash-card">
+            <div class="dash-card-header">
+              <div>
+                <div class="dash-card-title">Market Entry Score</div>
+                <div class="dash-card-subtitle">Charter timing & procurement signal</div>
+              </div>
+            </div>
+            <div id="marketEntryContent">
+              <!-- Rendered by JS -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Seasonal Decomposition -->
+        <div class="panel-grid panel-grid-3">
+          <div class="dash-card">
+            <div class="dash-card-title" style="margin-bottom: var(--space-3);">Trend Component</div>
+            <div class="chart-container chart-sm">
+              <canvas id="decompTrendChart"></canvas>
+            </div>
+          </div>
+          <div class="dash-card">
+            <div class="dash-card-title" style="margin-bottom: var(--space-3);">Seasonal Component</div>
+            <div class="chart-container chart-sm">
+              <canvas id="decompSeasonalChart"></canvas>
+            </div>
+          </div>
+          <div class="dash-card">
+            <div class="dash-card-title" style="margin-bottom: var(--space-3);">Forecast Accuracy</div>
+            <div id="accuracyMetrics">
+              <!-- Rendered by JS -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== VESSEL OPTIMIZER PANEL ==================== -->
+      <div class="panel" id="panel-vessel">
+        <div class="dash-card" style="margin-bottom: var(--space-5);">
+          <div class="dash-card-header">
+            <div class="dash-card-title">Vessel Optimization Input</div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Origin Port</label>
+              <select class="form-select" id="vesselOriginSelect"></select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Destination Port</label>
+              <select class="form-select" id="vesselDestSelect"></select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Cargo Volume (MT)</label>
+              <input type="number" class="form-input" id="vesselCargoInput" value="75000" min="5000" max="250000" step="5000">
+            </div>
+            <div class="form-group">
+              <label class="form-label">&nbsp;</label>
+              <button class="btn btn-primary" id="optimizeVesselBtn">Optimize</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Vessel Recommendations -->
+        <div id="vesselResults">
+          <div class="empty-state">
+            <div class="empty-state-icon">🚢</div>
+            <div class="empty-state-title">Configure & Optimize</div>
+            <div class="empty-state-desc">Select origin, destination, and cargo volume, then click Optimize to see vessel recommendations.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== ROUTE ANALYSIS PANEL ==================== -->
+      <div class="panel" id="panel-route">
+        <div class="dash-card" style="margin-bottom: var(--space-5);">
+          <div class="dash-card-header">
+            <div class="dash-card-title">Route Comparison</div>
+          </div>
+          <div class="form-inline">
+            <div class="form-group">
+              <label class="form-label">Origin</label>
+              <select class="form-select" id="routeOriginSelect"></select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">&nbsp;</label>
+              <button class="btn btn-primary" id="compareRoutesBtn">Compare All Destinations</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="routeResults">
+          <div class="empty-state">
+            <div class="empty-state-icon">🗺️</div>
+            <div class="empty-state-title">Select an Origin Port</div>
+            <div class="empty-state-desc">Choose a loading port and compare routes to all East Coast India discharge ports.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== PORT INFRASTRUCTURE PANEL ==================== -->
+      <div class="panel" id="panel-port">
+        <div class="dash-card" style="margin-bottom: var(--space-5);">
+          <div class="dash-card-header">
+            <div class="dash-card-title">Port Infrastructure Database</div>
+            <div class="dash-card-actions">
+              <div class="btn-group" id="portTypeGroup">
+                <button class="btn btn-secondary btn-sm active" data-type="discharge">India East Coast</button>
+                <button class="btn btn-secondary btn-sm" data-type="loading">Origin Ports</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="portCards">
+          <!-- Rendered by JS -->
+        </div>
+      </div>
+
+      <!-- ==================== RISK ALERTS PANEL ==================== -->
+      <div class="panel" id="panel-risk">
+        <div class="stat-cards" id="riskStats">
+          <!-- Rendered by JS -->
+        </div>
+        <div class="panel-grid panel-grid-2" style="margin-top: var(--space-5);">
+          <div class="dash-card">
+            <div class="dash-card-header">
+              <div class="dash-card-title">Active Alerts</div>
+            </div>
+            <div id="riskAlertsList">
+              <!-- Rendered by JS -->
+            </div>
+          </div>
+          <div class="dash-card">
+            <div class="dash-card-header">
+              <div class="dash-card-title">Volatility Index</div>
+            </div>
+            <div class="chart-container chart-md">
+              <canvas id="volatilityChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== CONTRACT STRATEGY PANEL ==================== -->
+      <div class="panel" id="panel-contract">
+        <div class="dash-card" style="margin-bottom: var(--space-5);">
+          <div class="dash-card-header">
+            <div class="dash-card-title">Contract Strategy Advisor</div>
+            <div class="dash-card-subtitle">Spot vs Short-Term COA vs Mid-Term COA</div>
+          </div>
+          <div class="form-inline" style="margin-top: var(--space-4);">
+            <div class="form-group">
+              <label class="form-label">Vessel Class</label>
+              <select class="form-select" id="contractVesselSelect">
+                <option value="CAPESIZE">Capesize</option>
+                <option value="PANAMAX">Panamax</option>
+                <option value="SUPRAMAX">Supramax</option>
+                <option value="HANDYSIZE">Handysize</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Cargo Per Voyage (MT)</label>
+              <input type="number" class="form-input" id="contractCargoInput" value="75000" min="5000" step="5000">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Voyages / Year</label>
+              <input type="number" class="form-input" id="contractVoyagesInput" value="10" min="1" max="30">
+            </div>
+            <div class="form-group">
+              <label class="form-label">&nbsp;</label>
+              <button class="btn btn-primary" id="analyzeContractBtn">Analyze</button>
+            </div>
+          </div>
+        </div>
+        <div id="contractResults">
+          <div class="empty-state">
+            <div class="empty-state-icon">📋</div>
+            <div class="empty-state-title">Configure Parameters</div>
+            <div class="empty-state-desc">Set vessel class, cargo volume, and voyage frequency to receive contract strategy recommendations.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== IDLE MANAGEMENT PANEL ==================== -->
+      <div class="panel" id="panel-idle">
+        <div class="dash-card">
+          <div class="dash-card-header">
+            <div class="dash-card-title">Idle Mitigation Strategies</div>
+          </div>
+          <div id="idleResults">
+            <div class="empty-state">
+              <div class="empty-state-icon">⏱️</div>
+              <div class="empty-state-title">Select Origin and Destination</div>
+              <div class="empty-state-desc">Evaluate the idle risk for a specific route in the Vessel Optimizer to see mitigation strategies here.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== LIVE TELEMATICS PANEL ==================== -->
+      <div class="panel" id="panel-telematics" style="height: 100%;">
+        <div class="dash-card" style="height: 100%; padding: 0; display: flex; flex-direction: column; overflow: hidden; border: none; border-radius: 0;">
+          <div class="dash-card-header" style="padding: var(--space-4) var(--space-5); margin: 0; border-bottom: 1px solid var(--glass-border); background: var(--color-bg-card);">
+            <div class="dash-card-title">Global Fleet Telematics</div>
+            <div class="dash-card-actions">
+              <span class="badge badge-success" style="animation: pulse 2s infinite;"><span style="display:inline-block; width:6px; height:6px; background:currentColor; border-radius:50%; margin-right:4px;"></span>LIVE</span>
+            </div>
+          </div>
+          <div style="display: flex; flex: 1; min-height: 0; position: relative;">
+            <!-- Map Container -->
+            <div id="map-container" style="flex: 1; height: 100%; background: #000; position: relative; z-index: 1;">
+              <!-- Vessel Class Filter Bar -->
+              <div class="telematics-filter-bar" id="telematics-class-filters">
+                <button class="filter-btn active" data-class="ALL">All Fleet</button>
+                <button class="filter-btn" data-class="Capesize">Capesize</button>
+                <button class="filter-btn" data-class="Panamax">Panamax</button>
+                <button class="filter-btn" data-class="Supramax">Supramax</button>
+              </div>
+            </div>
+            <!-- Live Stats Sidebar -->
+            <div style="width: 320px; border-left: 1px solid var(--glass-border); background: var(--color-bg-card); display: flex; flex-direction: column; overflow-y: auto;">
+              <div style="padding: var(--space-4); border-bottom: 1px solid var(--glass-border);">
+                <div class="text-xs text-muted mb-2">ACTIVE VOYAGES TO INDIA</div>
+                <div class="text-3xl font-bold text-cyan" id="active-vessels-count">--</div>
+              </div>
+              <div id="telematics-feed" style="padding: var(--space-3); display: flex; flex-direction: column; gap: var(--space-3);">
+                <!-- Populated by JS -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== AI ASSISTANT PANEL ==================== -->
+      <div class="panel" id="panel-ai" style="height: 100%; max-width: 900px; margin: 0 auto;">
+        <div class="dash-card" style="height: calc(100vh - var(--header-height) - var(--space-6) * 2); display: flex; flex-direction: column;">
+          <div class="dash-card-header" style="padding-bottom: var(--space-4); border-bottom: 1px solid var(--glass-border); margin-bottom: 0;">
+            <div class="flex items-center gap-3">
+              <div style="width: 40px; height: 40px; border-radius: var(--radius-md); background: rgba(99, 102, 241, 0.15); color: var(--accent-indigo); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; box-shadow: var(--shadow-glow-sm);">
+                🧠
+              </div>
+              <div>
+                <div class="dash-card-title">Freight AI Assistant</div>
+                <div class="dash-card-subtitle" style="color: var(--color-success);">● Online and monitoring markets</div>
+              </div>
+            </div>
+          </div>
+          
+          <div id="ai-chat-feed" style="flex: 1; overflow-y: auto; padding: var(--space-5) 0; display: flex; flex-direction: column; gap: var(--space-4);">
+            <!-- AI messages go here -->
+          </div>
+
+          <div style="padding-top: var(--space-4); border-top: 1px solid var(--glass-border); margin-top: auto;">
+            <div style="display: flex; gap: var(--space-3);">
+              <input type="text" id="ai-prompt-input" class="form-input" placeholder="Ask about rate forecasts, route optimization, or market risks..." style="flex: 1; border-radius: var(--radius-full); padding-left: var(--space-4);">
+              <button class="btn btn-primary" id="ai-send-btn" style="border-radius: var(--radius-full); width: 44px; padding: 0; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
+                ↑
+              </button>
+            </div>
+            <div style="display: flex; gap: var(--space-2); margin-top: var(--space-3); flex-wrap: wrap;" id="ai-suggested-prompts">
+              <span class="badge" style="cursor: pointer; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border);">Analyze current Cape rates</span>
+              <span class="badge" style="cursor: pointer; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border);">Check weather risks for Australian routes</span>
+              <span class="badge" style="cursor: pointer; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border);">Suggest a contract strategy</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- Application Logic -->
+<script type="module" src="js/models/telematicsEngine.js?v=5"></script>
+<script type="module" src="js/models/aiEngine.js?v=5"></script>
+<script type="module" src="js/app.js?v=5"></script>
+
+</body>
+</html>
