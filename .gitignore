@@ -21,3 +21,34 @@ build/
 Thumbs.db
 .vscode/
 .idea/
+
+# Temporary test decks and scratch scripts
+test_*.pptx
+test_step.pptx
+~$*.pptx
+diagnose.py
+inspect_template_shapes.py
+
+# Video recordings, raw audio, and temporary inspection images
+video_recordings/
+video_recordings_new/
+test_recordings/
+*.webm
+*.mp3
+*.mp4
+test_*.mp4
+test_*.png
+test_pw.png
+test_render.png
+test_sdg_badge.png
+inspect_*.png
+inspected_*.png
+ref_template_*.png
+new_deck_*.png
+official_sih_slide_*.png
+pro2_slide*.png
+template_slide_*.png
+storm_surge_*.png
+current_new_template_slide_3.png
+extracted_pro2_images/
+
