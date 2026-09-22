@@ -49,7 +49,7 @@ def build_strict_template_deck():
     FONT_TNR = "Times New Roman"
 
     # Images
-    img_arch = os.path.join(assets_dir, "system_architecture_hd.png")
+    img_arch = os.path.join(assets_dir, "spectra_multitier_architecture.png")
     img_prototype = os.path.join(assets_dir, "crop_module1_telemetry.png")
     img_sdg9 = os.path.join(assets_dir, "sdg_9_logo.jpg")
     img_sdg16 = os.path.join(assets_dir, "sdg_16_logo.jpg")
@@ -410,9 +410,9 @@ def build_strict_template_deck():
     # Slide 3: Box 4 (Project Links & Status)
     tf_l3 = add_quadrant_card(slide3, 8.85, 5.40, 4.0, 1.9, "Links & Status")
     links_data = [
-        ("• GitHub: ", "Futuristics-NTRO", ""),
-        ("• Video: ", "youtu.be/spectra-ntro", ""),
-        ("• Status: ", "45% completed.", "Core ingestion & UI operational")
+        ("• GitHub: ", "github.com/harikesh2709-creator/FUTURISTICS", ""),
+        ("• YouTube: ", "youtu.be/FUTURISTICS-SPECTRA", "(5-Min Demo Walkthrough)"),
+        ("• Status: ", "Phase-1 Functional Prototype", "(Air-gapped DSP + Neural AMC)")
     ]
     for lbl, val, note in links_data:
         p = tf_l3.add_paragraph()
