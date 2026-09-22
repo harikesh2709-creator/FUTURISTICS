@@ -1,0 +1,50 @@
+<mxfile host="app.diagrams.net" modified="2026-09-22" agent="draw.io" type="device">
+  <diagram id="elegant-arch" name="Elegant Architecture">
+    <mxGraphModel dx="1100" dy="300" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="300" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <!-- STAGE 1 -->
+        <mxCell id="box1" value="&lt;b style=&quot;font-size: 18px; color: #1E3A8A;&quot;&gt;1. RF Ingestion&lt;/b&gt;&lt;br&gt;&lt;br&gt;Raw .IQ / .wav&lt;br&gt;Welch PSD&lt;br&gt;Decimation" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;strokeWidth=2;shadow=1;fontFamily=Helvetica;fontSize=14;fontColor=#333333;arcSize=10;spacingTop=5;" vertex="1" parent="1">
+          <mxGeometry x="30" y="80" width="160" height="110" as="geometry"/>
+        </mxCell>
+
+        <!-- STAGE 2 -->
+        <mxCell id="box2" value="&lt;b style=&quot;font-size: 18px; color: #4338CA;&quot;&gt;2. Neural AMC&lt;/b&gt;&lt;br&gt;&lt;br&gt;1D-ResNet AI&lt;br&gt;Cyclostationary&lt;br&gt;Blind Baud Rate" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1D5E7;strokeColor=#9673A6;strokeWidth=2;shadow=1;fontFamily=Helvetica;fontSize=14;fontColor=#333333;arcSize=10;spacingTop=5;" vertex="1" parent="1">
+          <mxGeometry x="240" y="80" width="160" height="110" as="geometry"/>
+        </mxCell>
+
+        <!-- STAGE 3 -->
+        <mxCell id="box3" value="&lt;b style=&quot;font-size: 18px; color: #B45309;&quot;&gt;3. Demodulation&lt;/b&gt;&lt;br&gt;&lt;br&gt;Costas PLL&lt;br&gt;Gardner TED&lt;br&gt;Soft Symbols" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE6CC;strokeColor=#D79B00;strokeWidth=2;shadow=1;fontFamily=Helvetica;fontSize=14;fontColor=#333333;arcSize=10;spacingTop=5;" vertex="1" parent="1">
+          <mxGeometry x="450" y="80" width="160" height="110" as="geometry"/>
+        </mxCell>
+
+        <!-- STAGE 4 -->
+        <mxCell id="box4" value="&lt;b style=&quot;font-size: 18px; color: #047857;&quot;&gt;4. FEC Decoder&lt;/b&gt;&lt;br&gt;&lt;br&gt;GF(2) Matrix Rank&lt;br&gt;Soft Viterbi&lt;br&gt;Reed-Solomon" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;strokeWidth=2;shadow=1;fontFamily=Helvetica;fontSize=14;fontColor=#333333;arcSize=10;spacingTop=5;" vertex="1" parent="1">
+          <mxGeometry x="660" y="80" width="160" height="110" as="geometry"/>
+        </mxCell>
+
+        <!-- STAGE 5 -->
+        <mxCell id="box5" value="&lt;b style=&quot;font-size: 18px; color: #334155;&quot;&gt;5. C4ISR Intel&lt;/b&gt;&lt;br&gt;&lt;br&gt;WebGL Canvas&lt;br&gt;Threat Dossier&lt;br&gt;Air-Gapped" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=#666666;strokeWidth=2;shadow=1;fontFamily=Helvetica;fontSize=14;fontColor=#333333;arcSize=10;spacingTop=5;" vertex="1" parent="1">
+          <mxGeometry x="870" y="80" width="160" height="110" as="geometry"/>
+        </mxCell>
+
+        <!-- ARROWS -->
+        <mxCell id="arr1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;strokeWidth=3;endArrow=block;endFill=1;endSize=8;shadow=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="190" y="135" as="sourcePoint"/><mxPoint x="240" y="135" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="arr2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;strokeWidth=3;endArrow=block;endFill=1;endSize=8;shadow=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="400" y="135" as="sourcePoint"/><mxPoint x="450" y="135" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="arr3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;strokeWidth=3;endArrow=block;endFill=1;endSize=8;shadow=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="610" y="135" as="sourcePoint"/><mxPoint x="660" y="135" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="arr4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;strokeWidth=3;endArrow=block;endFill=1;endSize=8;shadow=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="820" y="135" as="sourcePoint"/><mxPoint x="870" y="135" as="targetPoint"/></mxGeometry>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

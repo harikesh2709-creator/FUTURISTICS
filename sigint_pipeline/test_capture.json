@@ -1,0 +1,6 @@
+{
+  "sample_rate": 200000.0,
+  "center_frequency": null,
+  "dtype": "cf32",
+  "channels": "interleaved_iq"
+}
