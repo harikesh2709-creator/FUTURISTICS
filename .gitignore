@@ -9,5 +9,11 @@ venv/
 .tempmediaStorage/
 test_*.pptx
 test_*.png
+test_*.mp4
+test_*.mp3
+build_5min_temp/
+build_live_project_temp/
+audio_output/
 .DS_Store
 Thumbs.db
+

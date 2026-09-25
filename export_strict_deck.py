@@ -2,9 +2,9 @@ import os
 import time
 import win32com.client
 
-ppt_path = r"c:\vs studio\ntro-signal-analyzer\SPECTRA_SIH_2026_Strict_Template_Presentation.pptx"
-pdf_path = r"c:\vs studio\ntro-signal-analyzer\SPECTRA_SIH_2026_Strict_Template_Presentation.pdf"
-out_dir = r"c:\vs studio\ntro-signal-analyzer\exported_strict_template_slides"
+ppt_path = r"c:\vs studio\ntro-signal-analyzer\sih_strict_template\SPECTRA_SIH_2026_Strict_Template_Presentation.pptx"
+pdf_path = r"c:\vs studio\ntro-signal-analyzer\sih_strict_template\SPECTRA_SIH_2026_Strict_Template_Presentation.pdf"
+out_dir = r"c:\vs studio\ntro-signal-analyzer\sih_strict_template\exported_slides"
 os.makedirs(out_dir, exist_ok=True)
 
 try:

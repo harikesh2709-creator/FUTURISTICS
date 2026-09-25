@@ -1,205 +1,328 @@
 import os
-import matplotlib.pyplot as plt
-import matplotlib.patches as patches
-from matplotlib.path import Path
+from playwright.sync_api import sync_playwright
 
-def generate_architecture_diagram():
+FLOWCHART_HTML = """<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  body {
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    width: 1000px;
+    height: 450px;
+    position: relative;
+  }
+  
+  /* Text defaults */
+  .text {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    font-size: 15px;
+  }
+  
+  .small-text {
+    position: absolute;
+    font-size: 13px;
+    color: #1E293B;
+    font-weight: 700;
+    background: #FFFFFF;
+    padding: 3px 6px;
+    border-radius: 4px;
+    border: 1px solid #CBD5E1;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    line-height: 1.1;
+  }
+
+  /* Boxes */
+  .box {
+    position: absolute;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 6px;
+    line-height: 1.25;
+    letter-spacing: 0.2px;
+  }
+  
+  .solid-box {
+    color: #FFFFFF;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    font-weight: 700;
+  }
+
+  /* Modern SIGINT Palette */
+  .bg-primary { background: linear-gradient(135deg, #1E40AF, #1E3A8A); border: 2px solid #172554; } 
+  .bg-secondary { background: linear-gradient(135deg, #475569, #334155); border: 2px solid #1E293B; } 
+  .bg-accent { background: linear-gradient(135deg, #059669, #047857); border: 2px solid #064E3B; }
+  .bg-highlight { background: linear-gradient(135deg, #7C3AED, #6D28D9); border: 2px solid #4C1D95; }
+  
+  .bg-container-1 { 
+    background: #F0F9FF; 
+    border: 2px dashed #7DD3FC; 
+    border-radius: 12px; 
+    color: #0369A1; 
+    font-weight: 800; 
+  }
+  .bg-container-2 { 
+    background: #F8FAFC; 
+    border: 2px dashed #94A3B8; 
+    border-radius: 12px; 
+    color: #475569; 
+    font-weight: 800; 
+  }
+  
+  .inner-box {
+    background: #FFFFFF;
+    color: #0F172A;
+    border: 1.5px solid #94A3B8;
+    border-radius: 6px;
+    font-weight: 600;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+  }
+
+  /* Specific Box Placements - Expanded sizes for better clarity */
+  #box-left-white { left: 20px; top: 180px; width: 90px; height: 65px; font-size: 16px; }
+  #box-gnss { left: 150px; top: 50px; width: 140px; height: 80px; font-size: 24px; }
+  #box-pnt-teal { left: 300px; top: 25px; width: 90px; height: 50px; font-size: 15px; }
+  #box-leosoo { left: 175px; top: 175px; width: 100px; height: 55px; font-size: 15px; }
+  
+  /* Blue Container */
+  #container-blue { left: 520px; top: 25px; width: 450px; height: 185px; align-items: flex-start; justify-content: center; padding-top: 10px; font-size: 16px; text-transform: uppercase; letter-spacing: 0.5px; }
+  
+  /* Inner Teal Boxes (Blue container) - Bigger Text */
+  .inner-teal { width: 110px; height: 45px; font-size: 14px; }
+  #b-orbit { left: 535px; top: 75px; }
+  #b-motion { left: 675px; top: 65px; width: 90px; height: 55px; }
+  #b-rf { left: 795px; top: 75px; width: 105px; height: 45px; }
+  #b-noise { left: 685px; top: 145px; width: 150px; height: 45px; }
+  #b-compare { left: 530px; top: 145px; width: 130px; height: 45px; }
+
+  /* Purple Container */
+  #container-purple { left: 330px; top: 145px; width: 175px; height: 275px; align-items: flex-start; justify-content: center; padding-top: 10px; font-size: 15px; text-transform: uppercase; letter-spacing: 0.5px; }
+  
+  /* Inner Pink Boxes (Purple container) - Bigger Text */
+  .inner-pink { left: 345px; width: 145px; height: 40px; font-size: 14px; }
+  #p1 { top: 180px; }
+  #p2 { top: 225px; }
+  #p3 { top: 270px; }
+  #p4 { top: 315px; }
+  #p5 { top: 360px; }
+
+  /* Standalone Pink */
+  #box-standalone-pink { left: 530px; top: 255px; width: 150px; height: 50px; font-size: 14px; }
+  
+  /* SVG for arrows */
+  svg {
+    position: absolute;
+    top: 0; left: 0; width: 1000px; height: 450px; pointer-events: none;
+  }
+  path, line {
+    fill: none;
+    stroke: #64748B;
+    stroke-width: 3px; /* Thicker arrows */
+    stroke-linejoin: round;
+  }
+  .arr-green { stroke: #0284C7; } /* using blue instead of green for modern look */
+
+  /* Arrowheads */
+  .arrow-head { fill: #64748B; stroke: none; }
+  .arrow-head-green { fill: #0284C7; stroke: none; }
+
+</style>
+</head>
+<body>
+
+<!-- Arrows Layer -->
+<svg>
+  <defs>
+    <marker id="arrow" markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto-start-reverse">
+      <polygon points="0 0, 5 2.5, 0 5" class="arrow-head" />
+    </marker>
+    <marker id="arrow-green" markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto-start-reverse">
+      <polygon points="0 0, 5 2.5, 0 5" class="arrow-head-green" />
+    </marker>
+  </defs>
+
+  <!-- Green arrows to left white box -->
+  <line x1="175" y1="200" x2="110" y2="200" class="arr-green" marker-end="url(#arrow-green)" />
+  <path d="M 150 90 L 130 90 L 130 200" class="arr-green" />
+
+  <!-- GNSS to PNT Teal (up right) -->
+  <path d="M 290 90 L 345 90 L 345 75" marker-end="url(#arrow)" />
+  
+  <!-- GNSS to LEO SoO (down) -->
+  <line x1="220" y1="130" x2="220" y2="175" marker-end="url(#arrow)" />
+  <!-- PNT Teal to Orbit Modeling (horizontal) -->
+  <line x1="390" y1="50" x2="590" y2="50" />
+  <line x1="590" y1="50" x2="590" y2="75" marker-end="url(#arrow)" />
+
+  <!-- Inside Blue Box -->
+  <line x1="645" y1="95" x2="675" y2="95" marker-end="url(#arrow)" />
+  <line x1="765" y1="95" x2="795" y2="95" marker-end="url(#arrow)" />
+  <path d="M 900 95 L 930 95 L 930 165 L 835 165" marker-end="url(#arrow)" />
+  <line x1="685" y1="165" x2="660" y2="165" marker-end="url(#arrow)" />
+  
+  <!-- Compare to Orbit (Up) -->
+  <line x1="590" y1="145" x2="590" y2="120" marker-end="url(#arrow)" />
+
+  <!-- Compare to Signal Processing (Left) -->
+  <path d="M 530 165 L 515 165 L 515 197 L 490 197" marker-end="url(#arrow)" />
+
+  <!-- Inside Purple Box (Down arrows) -->
+  <line x1="415" y1="220" x2="415" y2="225" marker-end="url(#arrow)" />
+  <line x1="415" y1="265" x2="415" y2="270" marker-end="url(#arrow)" />
+  <line x1="415" y1="310" x2="415" y2="315" marker-end="url(#arrow)" />
+  <line x1="415" y1="355" x2="415" y2="360" marker-end="url(#arrow)" />
+
+  <!-- Standalone Pink to Pseudorange -->
+  <line x1="530" y1="280" x2="490" y2="280" marker-end="url(#arrow)" />
+
+  <!-- Tracking to LEO SoO -->
+  <path d="M 345 380 L 315 380 L 315 200 L 275 200" marker-end="url(#arrow)" />
+
+</svg>
+
+<!-- Boxes -->
+<div class="box solid-box bg-accent" id="box-left-white">Decoded<br>Bits</div>
+<div class="box solid-box bg-primary" id="box-gnss">Raw .IQ<br>.wav</div>
+<div class="box solid-box bg-secondary" id="box-pnt-teal">Pre-<br>Process</div>
+<div class="box solid-box bg-secondary" id="box-leosoo">Demod<br>Core</div>
+
+<div class="box bg-blue-container" id="container-blue">Autonomous Parameter Extraction & AMC</div>
+<div class="box inner-box inner-teal" id="b-orbit">Welch PSD &<br>FFT</div>
+<div class="box inner-box inner-teal" id="b-motion">Cyclo CAF</div>
+<div class="box inner-box inner-teal" id="b-rf">Cumulants</div>
+<div class="box inner-box inner-teal" id="b-noise">1D-CNN + Bi-LSTM<br>Model</div>
+<div class="box inner-box inner-teal" id="b-compare">Class Confidence</div>
+
+<div class="box bg-purple-container" id="container-purple">Blind Sync & FEC Decoding</div>
+<div class="box inner-box inner-pink" id="p1">Gardner Timing TED</div>
+<div class="box inner-box inner-pink" id="p2">Costas Loop Sync</div>
+<div class="box inner-box inner-pink" id="p3">Galois Field Solver</div>
+<div class="box inner-box inner-pink" id="p4">Viterbi Trellis Decode</div>
+<div class="box inner-box inner-pink" id="p5">Reed-Solomon Decode</div>
+
+<div class="box solid-box bg-highlight" id="box-standalone-pink">Cryptographic<br>SHA-256 Audit</div>
+
+<!-- Text Labels -->
+<div class="small-text" style="left:230px; top:145px;">No signal</div>
+<div class="small-text" style="left:110px; top:178px; color:#0284C7;">Signal Data</div>
+<div class="small-text" style="left:305px; top:75px;">For extraction</div>
+<div class="small-text" style="left:415px; top:15px; width: 120px; text-align:center;">Avoiding manual<br>triage bottlenecks</div>
+<div class="small-text" style="left:600px; top:130px;">&lt; 95% matches</div>
+<div class="small-text" style="left:535px; top:200px;">&gt; 95% matches</div>
+
+</body>
+</html>
+"""
+
+LAYER_HTML = """<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  body {
+    margin: 0; padding: 0; background: transparent;
+    font-family: system-ui, -apple-system, sans-serif;
+    width: 400px; height: 185px;
+    position: relative;
+  }
+  .title {
+    font-size: 16px; font-weight: 800; color: #1E3A8A;
+    text-transform: uppercase; margin-bottom: 20px;
+    letter-spacing: 0.5px;
+  }
+  /* The 3 rectangles */
+  .rect {
+    position: absolute; width: 180px; height: 90px;
+    box-shadow: 2px 4px 8px rgba(0,0,0,0.2);
+    border-radius: 6px;
+    border: 1px solid rgba(255,255,255,0.2);
+  }
+  .r1 { left: 20px; top: 40px; background: linear-gradient(135deg, #047857, #064E3B); } /* green */
+  .r2 { left: 35px; top: 60px; background: linear-gradient(135deg, #BE123C, #881337); } /* red */
+  .r3 { left: 50px; top: 80px; background: linear-gradient(135deg, #1D4ED8, #1E3A8A); } /* blue */
+
+  /* Labels */
+  .lbl {
+    position: absolute;
+    background: #FFFFFF; border: 1.5px solid #CBD5E1;
+    padding: 4px 8px; font-size: 14px; color: #0F172A;
+    border-radius: 4px; font-weight: 700;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  }
+  #l1 { left: 230px; top: 30px; }
+  #l2 { left: 260px; top: 90px; }
+  #l3 { left: 230px; top: 140px; }
+
+  /* Arrows */
+  svg {
+    position: absolute; top:0; left:0; width: 400px; height: 185px; pointer-events: none;
+    z-index: 10;
+  }
+  path, line { fill: none; stroke: #64748B; stroke-width: 3px; }
+  .arrow-head { fill: #64748B; stroke: none; }
+</style>
+</head>
+<body>
+  <div class="title" style="margin-left: 20px; margin-top: 10px;">3 LAYER ARCHITECTURE</div>
+
+  <div class="rect r1"></div>
+  <div class="rect r2"></div>
+  <div class="rect r3"></div>
+
+  <svg>
+    <defs>
+      <marker id="arrow" markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto-start-reverse">
+        <polygon points="0 0, 5 2.5, 0 5" class="arrow-head" />
+      </marker>
+    </defs>
+    <!-- From green (back) to l1 -->
+    <path d="M 120 40 L 120 35 L 225 35" marker-end="url(#arrow)" />
+    <!-- From red (middle) to l2 -->
+    <path d="M 215 75 L 230 75 L 230 100 L 255 100" marker-end="url(#arrow)" />
+    <!-- From blue (front) to l3 -->
+    <path d="M 230 120 L 245 120 L 245 150 L 225 150" marker-end="url(#arrow)" />
+  </svg>
+
+  <div class="lbl" id="l1">Physical & MAC</div>
+  <div class="lbl" id="l2">Feature AMC</div>
+  <div class="lbl" id="l3">GF(2) Decoders</div>
+</body>
+</html>
+"""
+
+def generate():
     assets_dir = r'c:\vs studio\ntro-signal-analyzer\presentation_assets'
     os.makedirs(assets_dir, exist_ok=True)
-    out_path = os.path.join(assets_dir, 'system_architecture_drawio.png')
-
-    # Dimensions matching exact 2.76:1 aspect ratio for Slide 3 Box 2 (5.65" x 2.05")
-    fig_w, fig_h = 13.8, 5.0
-    fig, ax = plt.subplots(figsize=(fig_w, fig_h), dpi=300)
-
-    # Background matches SIH card background #F1F6FE exactly
-    bg_color = '#F1F6FE'
-    fig.patch.set_facecolor(bg_color)
-    ax.set_facecolor(bg_color)
-    ax.axis('off')
-    ax.set_xlim(0, 13.8)
-    ax.set_ylim(0, 5.0)
-
-    # Colors
-    c_card_bg = '#FFFFFF'
-    c_card_border = '#CBD5E1'
-    c_navy = '#0F172A'
-    c_text = '#1E293B'
-    c_muted = '#475569'
+    out_flow = os.path.join(assets_dir, 'system_architecture_drawio.png')
+    out_3layer = os.path.join(assets_dir, 'spectra_3layer_approach.png')
     
-    # Stage accent colors
-    stages = [
-        {
-            "num": "STAGE 1",
-            "title": "INGESTION & FRONT-END",
-            "accent": "#2563EB",       # Blue
-            "light_accent": "#EFF6FF",
-            "badge_text": "#1E40AF",
-            "x": 0.40, "w": 2.30,
-            "blocks": [
-                ("Raw .IQ (Float32 / Int16)", "Baseband capture files"),
-                ("High-Rate .wav Audio", "Spacecraft telemetry"),
-                ("Automated DC Nulling", "Hardware LO leakage removal"),
-                ("Polyphase Channelizer", "Sub-band decimation filter"),
-                ("Welch PSD & Waterfall", "Real-time spectral analysis")
-            ]
-        },
-        {
-            "num": "STAGE 2",
-            "title": "FEATURE & NEURAL AMC",
-            "accent": "#7C3AED",       # Purple
-            "light_accent": "#F5F3FF",
-            "badge_text": "#5B21B6",
-            "x": 3.00, "w": 2.35,
-            "blocks": [
-                ("Cyclostationary CAF", "Sx^α(f) baud rate recovery"),
-                ("Higher-Order Cumulants", "C40, C42, C63 statistics"),
-                ("1D-CNN + Bi-LSTM AMC", "10-class modulation in <35ms"),
-                ("SNR & Doppler Estimator", "Adaptive thresholding (-4 dB)"),
-                ("Blind Constellation Map", "Symmetry & order detection")
-            ]
-        },
-        {
-            "num": "STAGE 3",
-            "title": "SYNC & DEMODULATION",
-            "accent": "#D97706",       # Amber
-            "light_accent": "#FFFBEB",
-            "badge_text": "#92400E",
-            "x": 5.65, "w": 2.35,
-            "blocks": [
-                ("Gardner Timing TED", "Symbol timing synchronization"),
-                ("4th-Power Carrier FFT", "Coarse frequency offset lock"),
-                ("Costas Phase Loop (PLL)", "Fine carrier phase tracking"),
-                ("Optimal Matched Filter", "Root-Raised Cosine (RRC)"),
-                ("Soft Symbol Demapper", "Log-Likelihood Ratio (LLR)")
-            ]
-        },
-        {
-            "num": "STAGE 4",
-            "title": "SOLVER & FEC DECODE",
-            "accent": "#059669",       # Emerald
-            "light_accent": "#ECFDF5",
-            "badge_text": "#065F46",
-            "x": 8.30, "w": 2.35,
-            "blocks": [
-                ("Galois Field GF(2) Solver", "Blind interleaver depth D"),
-                ("Matrix Rank Algorithm", "Linear algebraic rank parity"),
-                ("Viterbi Trellis Decoder", "CCSDS Convolutional r=1/2"),
-                ("Reed-Solomon (255,223)", "Syndrome error correction"),
-                ("Frame Synchronizer", "ASM & sync-word detection")
-            ]
-        },
-        {
-            "num": "STAGE 5",
-            "title": "SOVEREIGN C4ISR",
-            "accent": "#0F172A",       # Dark Slate / Navy
-            "light_accent": "#F8FAFC",
-            "badge_text": "#0F172A",
-            "x": 10.95, "w": 2.20,
-            "blocks": [
-                ("Decoded Bitstream Hex", "Extracted plaintext telemetry"),
-                ("WebGL 60fps Telemetry", "Live constellation & eye diag"),
-                ("Radar Threat Scoring", "Autonomous emitter risk eval"),
-                ("SHA-256 Audit Dossier", "Cryptographic chain-of-custody"),
-                ("100% Air-Gapped Engine", "Zero cloud dependency / leakage")
-            ]
-        }
-    ]
-
-    card_y = 0.25
-    card_h = 3.90
-
-    # Top title bar in diagram with proper spacing
-    ax.text(6.90, 4.68, "SPECTRA END-TO-END AUTONOMOUS SIGNAL PROCESSING ARCHITECTURE & DATA FLOW",
-            fontsize=11.5, fontweight='bold', color='#1E3A8A', ha='center', va='center', family='sans-serif')
-    ax.text(6.90, 4.32, "Raw Baseband Intercept  ──►  Blind Parameter & Modulation Extraction  ──►  Synchronization  ──►  Blind FEC Solving  ──►  Actionable C4ISR",
-            fontsize=8.0, fontweight='bold', color='#475569', ha='center', va='center', family='sans-serif')
-
-    for stg in stages:
-        x, w = stg["x"], stg["w"]
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
         
-        # Outer Stage Box
-        outer = patches.FancyBboxPatch(
-            (x, card_y), w, card_h,
-            boxstyle="round,pad=0.06,rounding_size=0.12",
-            facecolor=c_card_bg,
-            edgecolor=stg["accent"],
-            linewidth=1.6,
-            zorder=2
-        )
-        ax.add_patch(outer)
-
-        # Stage Header Background
-        header_bg = patches.FancyBboxPatch(
-            (x + 0.04, card_y + card_h - 0.65), w - 0.08, 0.60,
-            boxstyle="round,pad=0.03,rounding_size=0.08",
-            facecolor=stg["light_accent"],
-            edgecolor='none',
-            zorder=3
-        )
-        ax.add_patch(header_bg)
-
-        # Stage Header Text
-        ax.text(x + w/2, card_y + card_h - 0.22, stg["num"],
-                fontsize=7.5, fontweight='bold', color=stg["badge_text"], ha='center', va='center', family='sans-serif', zorder=4)
-        ax.text(x + w/2, card_y + card_h - 0.46, stg["title"],
-                fontsize=8.0, fontweight='bold', color=stg["accent"], ha='center', va='center', family='sans-serif', zorder=4)
-
-        # Blocks inside stage
-        block_y_start = card_y + card_h - 0.80
-        block_h = 0.52
-        gap = 0.10
-
-        for idx, (b_title, b_sub) in enumerate(stg["blocks"]):
-            by = block_y_start - (idx + 1) * (block_h + gap) + gap
-            
-            # Sub-card
-            sub_box = patches.FancyBboxPatch(
-                (x + 0.10, by), w - 0.20, block_h,
-                boxstyle="round,pad=0.02,rounding_size=0.05",
-                facecolor='#F8FAFC',
-                edgecolor=c_card_border,
-                linewidth=0.8,
-                zorder=3
-            )
-            ax.add_patch(sub_box)
-
-            # Left mini color pill indicator
-            pill = patches.Rectangle(
-                (x + 0.10, by), 0.05, block_h,
-                facecolor=stg["accent"], edgecolor='none', zorder=4
-            )
-            ax.add_patch(pill)
-
-            # Text inside sub-card
-            ax.text(x + 0.20, by + block_h - 0.18, b_title,
-                    fontsize=7.2, fontweight='bold', color=c_text, va='center', family='sans-serif', zorder=4)
-            ax.text(x + 0.20, by + 0.15, b_sub,
-                    fontsize=6.0, color=c_muted, va='center', family='sans-serif', zorder=4)
-
-    # Connector arrows between stages
-    arrow_labels = [
-        ("Baseband\nIQ / wav", 2.85, 2.35),
-        ("Modulation\n& Baud", 5.50, 2.35),
-        ("Soft Bits\n& Symbols", 8.15, 2.35),
-        ("Decoded\nFrames", 10.80, 2.35),
-    ]
-
-    for lbl, ax_pos, ay_pos in arrow_labels:
-        # Arrow line
-        ax.annotate("", xy=(ax_pos + 0.12, ay_pos), xytext=(ax_pos - 0.12, ay_pos),
-                    arrowprops=dict(arrowstyle="-|>", color='#2563EB', lw=2.0, mutation_scale=12),
-                    zorder=5)
-        # Arrow label badge
-        ax.text(ax_pos, ay_pos + 0.32, lbl,
-                fontsize=5.8, fontweight='bold', color='#1E40AF', ha='center', va='center', family='sans-serif',
-                bbox=dict(boxstyle='round,pad=0.15', facecolor='#EFF6FF', edgecolor='#93C5FD', lw=0.6),
-                zorder=6)
-
-    plt.tight_layout()
-    plt.savefig(out_path, dpi=300, bbox_inches='tight', facecolor=fig.get_facecolor(), edgecolor='none')
-    plt.close()
-    print(f"Successfully generated clean Draw.io architecture diagram at: {out_path}")
+        # Flowchart
+        page1 = browser.new_page(viewport={"width": 1000, "height": 450}, device_scale_factor=2)
+        page1.set_content(FLOWCHART_HTML)
+        page1.wait_for_timeout(300)
+        page1.screenshot(path=out_flow, omit_background=True)
+        print(f"Exported exact reference style flowchart: {out_flow}")
+        
+        # 3 Layer
+        page2 = browser.new_page(viewport={"width": 400, "height": 185}, device_scale_factor=2)
+        page2.set_content(LAYER_HTML)
+        page2.wait_for_timeout(300)
+        page2.screenshot(path=out_3layer, omit_background=True)
+        print(f"Exported exact reference style 3-layer approach: {out_3layer}")
+        
+        browser.close()
 
 if __name__ == "__main__":
-    generate_architecture_diagram()
+    generate()
